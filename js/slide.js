@@ -32,7 +32,6 @@ FlexSlider.prototype = {
 		arrLink: []
 	},
 	slideFade: function() {		//淡入淡出模式
-		// if (this.defaults.type != 'fade') return false;
 		var num = 0;
 		var _this = this;
 		_this.timer = autoPlay();
@@ -61,16 +60,9 @@ FlexSlider.prototype = {
 					}
 					setOriginalState(num);
 				};
-				// if (_this.options.paused){
-				// 	clearInterval(obj.timer)
-				// } else {
-					// _this.timer = setInterval(tabImg, _this.options.timeout);
-				// }
 			};
 	},
 	slideMove: function() {		//滑动模式
-		// if (this.defaults.type != 'slide') return false;
-		
 		var num = 0;
 		var _this = this;
 		_this.timer = autoPlay();
@@ -92,12 +84,6 @@ FlexSlider.prototype = {
 				    move();
 				    },_this.options.timeout);
 			}
-			// if (newOptiongs.paused) {
-			// 	clearInterval(timer);
-			// } else {
-			// 	autoPlay(obj);
-			// }
-			// autoPlay();
 			return function move(){
 				_this.options.direction ? num++ : num-- ; 
 			    if(num == len){  //当图片到最后一张的时候，将oUl的left值设为0重新开始
@@ -113,11 +99,24 @@ FlexSlider.prototype = {
 	},
 	paused: function() {
 		clearInterval(this.timer);
-		console.log(this);
 	},
 	play: function() {
-		// this.timer = this.timer;
-		console.log(this.timer);
+	},
+	tabControl: function() {
+		var oTabUl = document.createElement('ul');
+		var aLi = oTabUl.getElementsByTagName('li');
+		var tabContent = '';
+		var len = this.options.arrImg.length;
+		for (var i = 0; i < len; i++) {
+			tabContent += "<li>" + (i + 1) + "</li>";
+		}
+		oTabUl.innerHTML = tabContent;
+		oTabUl.className = 'clearfix slide_tab';
+		oTabUl.style.cssText += "padding:5px 10px;display: flex;justify-content: space-between;positon: absolute;z-index:" + 2 * len;
+		for(var j = 0; j < len; j++) {
+			aLi[j].style.cssText = 'width: 10px;height: 10px;border-radius: 50%;background:#999; margin:0 5px;';
+		}
+		this.oUl.parentNode.appendChild(oTabUl);
 	}
 };
 var json = {
@@ -127,18 +126,5 @@ var json = {
 var slider1 = new FlexSlider('wrap1', json);
 var slider2 = new FlexSlider('wrap2', json);
 slider1.slideFade();
+slider1.tabControl();
 slider2.slideMove();
-var oBtn = document.getElementById('btn');
-oBtn.onclick = function() {
-	if (this.isClick) {
-		slider.play();
-		// this.isClick = !this.isClick;
-	} else {
-		slider.paused();
-	}
-	this.isClick = !this.isClick;
-	
-};
-// console.log(FlexSlider.prototype.defaults.type[0]);
-// console.log(slide.options);
-

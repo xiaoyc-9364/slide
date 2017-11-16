@@ -32,3 +32,10 @@
 .slide_main li {
 	position: absolute;
 }
+.slide_tab {
+	padding:5px 10px;
+	display: flex;
+	justify-content: space-between;
+	position: absolute;
+	background: red;
+}
