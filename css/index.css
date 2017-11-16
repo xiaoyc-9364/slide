@@ -1,0 +1,34 @@
+@charset: 'utf-8';
+#wrap1{
+	/*width: 936px;*/
+	/*height: 316px;*/
+	width: 300px; 
+	height: 150px;
+	/*background: red;*/
+	margin: 50px auto;
+	border: 1px solid #333;
+}
+#wrap2{
+	/*width: 936px;*/
+	/*height: 316px;*/
+	width: 300px; 
+	height: 150px;
+	border: 1px solid #333;
+	margin: 50px auto;
+}
+.clearfix:after{
+	content: '.';
+	display: block;
+	visibility: hidden;
+	height: 0;
+	clear: both;
+}
+.clearfix{
+	*zoom: 1;
+}
+.slide_main{
+	position: absolute;
+}
+.slide_main li {
+	position: absolute;
+}
