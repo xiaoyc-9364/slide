@@ -8,7 +8,7 @@ function FlexSlider(id, opts) {		//包裹元素的id，opts包含一个图片路
 	this.options = extend(arguments.callee.prototype.defaults, opts);	//拷贝对象
 	var len = this.options.arrImg.length;	
 	wrap.style.cssText += 'overflow: hidden;position: relative;';	//设置包裹元素的css
-	this.oUl.className = 'slide_main';		//ul添加class
+	this.oUl.className = 'clearfix slide_main';		//ul添加class
 	for (var i = 0; i < len; i++) {
 		var imgUrl = this.options.arrLink[i] ? 'https://' + this.options.arrLink[i] : 'javascript:void(0);';
 		str += "<li><a href='" + imgUrl + "'>"+(''+(i+1))+"<img src='" + this.options.arrImg[i] + "'/></a></li>";
@@ -42,6 +42,7 @@ FlexSlider.prototype = {
 			var len = obj.children.length;
 			function setOriginalState(index) {
 				for (var k = 0; k < len; k++) {
+					_this.oUl.children[k].index = k;
 					//设置定位和层级,透明度,过渡
 					setOpacity(obj.children[k], 0);
 					obj.children[k].style.cssText += 'transition: all ' + ( _this.options.average / 10 ) + 's;left: 0;top: 0;z-index: 1';
@@ -77,6 +78,7 @@ FlexSlider.prototype = {
 			var len = obj.children.length;
 			for (var i = 0; i < len; i++) {
 				//设置图片的定位
+				obj.children[k].index = k;
 				obj.children[i].style.left = (i % len) * obj.children[0].offsetWidth + 'px';
 			}
 			function autoPlay(){
@@ -112,11 +114,17 @@ FlexSlider.prototype = {
 		}
 		oTabUl.innerHTML = tabContent;
 		oTabUl.className = 'clearfix slide_tab';
-		oTabUl.style.cssText += "padding:5px 10px;display: flex;justify-content: space-between;positon: absolute;z-index:" + 2 * len;
-		for(var j = 0; j < len; j++) {
-			aLi[j].style.cssText = 'width: 10px;height: 10px;border-radius: 50%;background:#999; margin:0 5px;';
-		}
+		//设置选项卡的层级和左外边距
+		oTabUl.style.cssText += "z-index: " + 2 * len + ";margin-left: " + -(len * 10 + 10) +'px;';
+		//将选项卡添加到包裹元素中
 		this.oUl.parentNode.appendChild(oTabUl);
+		(function(index) {
+			for (var j = 0; j < len; j++) {
+				aLi[j].className = '';
+			}
+			aLi[index].className = 'active';
+		})(0);
+
 	}
 };
 var json = {
@@ -127,4 +135,5 @@ var slider1 = new FlexSlider('wrap1', json);
 var slider2 = new FlexSlider('wrap2', json);
 slider1.slideFade();
 slider1.tabControl();
+slider2.tabControl();
 slider2.slideMove();
