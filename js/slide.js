@@ -20,6 +20,37 @@ function FlexSlider(id, opts) {		//包裹元素的id，opts包含一个图片路
 	}
 	//将创建的ul添加到包裹元素中
 	wrap.appendChild(this.oUl);	
+
+	//创建选项卡
+	this.oTabUl = document.createElement('ul');
+	var aTabLi = this.oTabUl.getElementsByTagName('li');
+	var tabContent = '';
+	for (var i = 0; i < len; i++) {
+		tabContent += "<li>" + (i + 1) + "</li>";
+	}
+	this.oTabUl.innerHTML = tabContent;
+	this.oTabUl.className = 'clearfix slide_tab';
+	//设置选项卡的层级和左外边距,将选项卡隐藏，需要时调用
+	this.oTabUl.style.cssText += "z-index: " + 2 * len + ";display: none;margin-left: " + -(len * 10 + 10) +'px;';
+	//将选项卡添加到包裹元素中
+	this.oUl.parentNode.appendChild(this.oTabUl);
+	(function(index) {
+		for (var j = 0; j < len; j++) {
+			aTabLi[j].className = '';
+		}
+		aTabLi[index].className = 'active';
+	})(0);
+	//将事件委托到选项卡上
+	this.oTabUl.addEventListener('mouseover', function(event) {
+		var target = event.target;
+		if (target.nodeName.toLowerCase() === 'li') {
+			for (var j = 0; j < len; j++) {
+				aTabLi[j].className = '';
+			}
+			target.className = 'active';
+		}
+	}, false)
+	console.log(this.oUl.children[3].index);
 }
 FlexSlider.prototype = {
 	concturctor: FlexSlider,
@@ -78,7 +109,7 @@ FlexSlider.prototype = {
 			var len = obj.children.length;
 			for (var i = 0; i < len; i++) {
 				//设置图片的定位
-				obj.children[k].index = k;
+				obj.children[i].index = i;
 				obj.children[i].style.left = (i % len) * obj.children[0].offsetWidth + 'px';
 			}
 			function autoPlay(){
@@ -105,26 +136,7 @@ FlexSlider.prototype = {
 	play: function() {
 	},
 	tabControl: function() {
-		var oTabUl = document.createElement('ul');
-		var aLi = oTabUl.getElementsByTagName('li');
-		var tabContent = '';
-		var len = this.options.arrImg.length;
-		for (var i = 0; i < len; i++) {
-			tabContent += "<li>" + (i + 1) + "</li>";
-		}
-		oTabUl.innerHTML = tabContent;
-		oTabUl.className = 'clearfix slide_tab';
-		//设置选项卡的层级和左外边距
-		oTabUl.style.cssText += "z-index: " + 2 * len + ";margin-left: " + -(len * 10 + 10) +'px;';
-		//将选项卡添加到包裹元素中
-		this.oUl.parentNode.appendChild(oTabUl);
-		(function(index) {
-			for (var j = 0; j < len; j++) {
-				aLi[j].className = '';
-			}
-			aLi[index].className = 'active';
-		})(0);
-
+		this.oTabUl.style.display = 'flex';
 	}
 };
 var json = {
