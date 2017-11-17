@@ -1,18 +1,13 @@
 @charset: 'utf-8';
 #wrap1{
-	/*width: 936px;*/
-	/*height: 316px;*/
-	width: 300px; 
-	height: 150px;
-	/*background: red;*/
+	width: 936px;
+	height: 316px;
 	margin: 50px auto;
 	border: 1px solid #333;
 }
 #wrap2{
-	/*width: 936px;*/
-	/*height: 316px;*/
-	width: 300px; 
-	height: 150px;
+	width: 936px;
+	height: 316px;
 	border: 1px solid #333;
 	margin: 50px auto;
 }
@@ -28,6 +23,7 @@
 }
 .slide_main{
 	position: absolute;
+	height: 100%;
 }
 .slide_main li {
 	position: absolute;
@@ -40,13 +36,13 @@
 	position: absolute;
 	left: 50%;
 	bottom: 10%;
-	/*background: red;*/
 }
 .slide_tab li {
-	width: 10px; 
-	height: 10px; 
+	width: 15px; 
+	height: 15px; 
 	border-radius: 50%; 
 	background: rgba(50, 50, 50, 0.4); 
+	cursor: pointer;
 	margin: 0px 5px;
 }
 .slide_tab .active {
