@@ -1,11 +1,10 @@
 
-function Slide(selector, opts) {		//参数类型：id-目标元素，opt-包含一个图片信息数组的对象
-
+function Slide(selector, opts) {		//参数类型：selector-目标元素选择器，opt-包含一个图片信息数组的对象
 	this.wrap = document.querySelector(selector);
 	this.options = extend(this.defaults, opts)  //复制对象
 	this.init();		
 }
-Slide.prototype.concturctor = Slide;
+
 Slide.prototype.defaults = {	//默认的属性
 	imgData: [],
 	timeout: 3000,		//轮播器切换的间隔时间
@@ -42,7 +41,6 @@ Slide.prototype.createNode = function () {		//创建轮播器的内容
 		oLink.appendChild(oImg);		//img标签添加到a标签
 		oLi.appendChild(oLink);			//a标签添加到li标签
 		this.oImgUl.appendChild(oLi);	
-
 	}
 	this.dotUl.innerHTML = dotStr;			
 	var aImg = this.oImgUl.getElementsByTagName('img');		
@@ -117,7 +115,7 @@ Slide.prototype.move = function(index) {			//滑动函数
 		dotChildren[i].className = '';
 	}
 	dotChildren[_this.cur % dotLen].className = 'active';	//因添加了辅助图片,传入的index有可能大于dotLen
-	doMove(images, -(_this.cur) * wrapWidth, 'left', _this.options.average, 30); //调用publicFunction.js中的运动函数
+	doMove(images, -(_this.cur) * wrapWidth, 'left', _this.options.average, 30); //调用publicFunction中的运动函数
 
 };
 Slide.prototype.paused = function () {		//暂停函数
@@ -129,7 +127,7 @@ Slide.prototype.play = function() {			//播放函数
 };
 Slide.prototype.go = function(n) {			//间隔n张跳转
 	clearInterval(this.timer);
-	this.cur = this.cur + n;	
+	this.cur = this.cur + n;
 	this.move();
 }
 var json = {
@@ -157,7 +155,7 @@ addEvent(oPlayBtn, 'click', function() {
 addEvent(oPrev, 'click', function() {
 	slider.go(-1);
 });
-addEvent(oPlayBtn, 'click', function() {
+addEvent(oNext, 'click', function() {
 	slider.go(1);
 });
 

@@ -51,7 +51,7 @@
 	border-radius: 50%; 
 	background: #ffffff; 
 	cursor: pointer;
-	margin: 0px 5px;
+	margin: 0px 8px;
 }
 .slide_tab .active {
 	background: red;
