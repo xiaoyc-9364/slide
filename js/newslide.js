@@ -1,12 +1,8 @@
 
-function Slide(id, opts) {		//参数类型：id-目标元素，opt-包含一个图片信息数组的对象
+function Slide(selector, opts) {		//参数类型：id-目标元素，opt-包含一个图片信息数组的对象
 
-	this.wrap = document.getElementById(id);
-	var opts = extend(arguments.callee.prototype.defaults, opts)  //复制对象
-	for (var i in opts) {	//将复制的对象里属性赋值给this
-		this[i] = opts[i];
-	}
-	this.num = 0;		//计数器
+	this.wrap = document.querySelector(selector);
+	this.options = extend(this.defaults, opts)  //复制对象
 	this.init();		
 }
 Slide.prototype.concturctor = Slide;
@@ -19,109 +15,110 @@ Slide.prototype.defaults = {	//默认的属性
 
 Slide.prototype.init = function() {		//初始方法
 	this.createNode();
-	this.slideMove();
-	var _this = this
+	this.slideAddEvent();
 	this.timer = this.autoPlay();
 };
 
 Slide.prototype.createNode = function () {		//创建轮播器的内容
-	var len = this.imgData.length;
-	var wrapWidth = this.wrap.clientWidth;		//获取目标元素的宽度
-	var oImgUl = document.createElement('ul');	//创建包裹图片的ul
-	var oTabUl = document.createElement('ul');	//创建选项卡ul
-	var str = '';
-	var dotstr = '';
-	var aImg = oImgUl.getElementsByTagName('img');
-	this.wrap.style.cssText += 'overflow: hidden;position: relative;';	//设置包裹元素的css
-	oImgUl.className = 'slide_main';		//添加class
-	oTabUl.className = 'slide_tab';
-	oTabUl.style.zIndex = 2 * len;			//将选项卡的层级设置成2陪的len,保证在最顶层
-	for (var i = 0; i < len; i++) {
-		str += "<li><a title='" + this.imgData[i].title + "' href='" + this.imgData[i].href + "'><img src='" + this.imgData[i].src +"' alt='" + this.imgData[i].alt + "'/></a></li>";
-		dotstr += "<li></li>";
+	var thisImgData = this.options.imgData;
+	var imgDataLen = thisImgData.length;	//图片个数
+	this.width = this.wrap.clientWidth;		//获取目标元素的宽度
+	this.oImgUl = document.createElement('ul');	//创建包裹图片的ul
+	this.dotUl = document.createElement('ul');	//创建选项卡ul
+	var dotStr = '';
+	var oLi, oLink, oImg;
+	this.wrap.className += 'slide_wrap';	//设置包裹元素的css
+	this.oImgUl.className = 'slide_main';		//添加class
+	this.dotUl.className = 'slide_tab';
+	for (var i = 0; i < imgDataLen; i++) {
+		dotStr += "<li></li>";
+		oLi = document.createElement('li');		//创建元素
+		oLink = document.createElement('a');
+		oImg = document.createElement('img');
+		oImg.src = thisImgData[i].src;		//<img>属性赋值
+		oImg.alt = thisImgData[i].alt;
+		oLink.href = thisImgData[i].href;	//<a>属性赋值
+		oLink.title = thisImgData[i].title;
+		oLink.appendChild(oImg);		//img标签添加到a标签
+		oLi.appendChild(oLink);			//a标签添加到li标签
+		this.oImgUl.appendChild(oLi);	
+
 	}
-	oImgUl.innerHTML =  str;
-	oTabUl.innerHTML = dotstr;
-	for (var j = 0; j < len; j++) {
-		aImg[j].style.width = wrapWidth + 'px';		//设置图片的宽度和包裹元素一致
+	this.dotUl.innerHTML = dotStr;			
+	var aImg = this.oImgUl.getElementsByTagName('img');		
+	var aFirst = this.oImgUl.children[0].cloneNode(true);  //实现无缝隙，添加一张辅助图片
+	this.oImgUl.appendChild(aFirst);
+	this.len = this.oImgUl.children.length;
+	for (var j = 0; j < this.len; j++) {
+		aImg[j].style.width = this.width + 'px';		//设置图片的宽度和包裹元素一致
 	}
-	oTabUl.style.marginLeft = -(len * 10 + 10) +'px';
-	this.wrap.appendChild(oImgUl);		//将图片和选项卡的ul添加到包裹元素中
-	this.wrap.appendChild(oTabUl);
+	this.wrap.appendChild(this.oImgUl);		//将图片和选项卡的ul添加到包裹元素中
+	this.wrap.appendChild(this.dotUl);
 };
 
-Slide.prototype.slideMove = function () {
+Slide.prototype.slideAddEvent = function () {
 	var _this = this;
-	var oImgUl = this.wrap.getElementsByTagName('ul')[0];
-	var oTabUl = this.wrap.getElementsByTagName('ul')[1];
-	
-	var newFirst = oImgUl.children[0].cloneNode(true);  //实现无缝隙，添加一张辅助图片
-	oImgUl.appendChild(newFirst);
-	var len = oImgUl.children.length;
-	oImgUl.style.width = len * oImgUl.children[0].offsetWidth + 'px';
-	for (var i = 0; i < len; i++) {
+	this.cur = 0;		//计数器
+	var wrapWidth = _this.width;
+	var imgChildren = _this.oImgUl.children;
+	var dotChildren = _this.dotUl.children;
+	var dotLen = dotChildren.length;
+	_this.oImgUl.style.width = _this.len * wrapWidth + 'px';		//设置包含图片的ul的宽度
+	for (var i = 0; i < _this.len; i++) {
 		//设置图片的定位
-		oImgUl.children[i].style.left = (i % len) * oImgUl.children[0].offsetWidth + 'px';
-	}
-	this.setTab(0);
-	for (var j = 0; j < len; j++) {
-		oImgUl.children[j].onmouseover = function () {
-			clearInterval(_this.timer)
-		};
-		oImgUl.children[j].onmouseout = function () {
+		imgChildren[i].style.left = (i % _this.len) * wrapWidth + 'px';
+		//绑定事件
+		addEvent(imgChildren[i], 'mouseover', function() {
+			clearInterval(_this.timer);
+		});
+		addEvent(imgChildren[i], 'mouseout', function() {
+			clearInterval(_this.timer);
 			_this.timer = _this.autoPlay();
-		};
-	}
-	for (var i = 0; i < len-1; i++) {
-		oTabUl.children[i].onmouseover = function(event) {
-			var target = event.target;
-			clearInterval(_this.timer)
-			_this.setTab(target.index);
-			target.className = 'active';
-			_this.num = target.index;
-			doMove(oImgUl, -_this.num*_this.wrap.clientWidth, 'left', _this.average, 30);
-		};
-		oTabUl.children[i].onmouseout = function(event) {
-			_this.timer = _this.autoPlay();
-		};
-	}
-	
-};
-Slide.prototype.setTab = function(index) {	//设置选项卡的显示函数
-	var _this = this;
-	var oTabUl = this.wrap.getElementsByTagName('ul')[1];
-	var len = oTabUl.children.length;
-	for (var i = 0; i < len; i++) {
-			oTabUl.children[i].index = i;
-			oTabUl.children[i].className = '';
-	}
-	if(oTabUl.children[index])oTabUl.children[index].className = 'active';
+		});
 		
+		(function (i) {		//i作为参数，需使用闭包
+			addEvent(dotChildren[i], 'mouseover', function () {
+				clearInterval(_this.timer);
+				_this.move(i);
+			});
+			addEvent(dotChildren[i], 'mouseout', function () {
+				clearInterval(_this.timer);
+				_this.timer = _this.autoPlay();
+			});
+		})(i % dotLen);	
+
+	}
+	_this.move();
 };
 Slide.prototype.autoPlay = function() {		//自动播放
 	var _this = this;
 	return  setInterval(function(){
-		_this.direction ? _this.num++ : _this.num--;
-		_this.move()();		//闭包
-	}, _this.timeout);
+		_this.cur = _this.options.direction ? _this.cur + 1 : _this.cur - 1;
+		_this.move();		//闭包
+	}, _this.options.timeout);
 }
-Slide.prototype.move = function() {			//滑动函数
+Slide.prototype.move = function(index) {			//滑动函数
 	var _this = this;
-	var oImgUl = this.wrap.children[0];
-	var len = this.wrap.children[0].children.length;
-	var step = this.wrap.clientWidth;
-	return  function (){
-			    if(_this.num == len){  //当图片到最后一张的时候，将oUl的left值设为0重新开始
-			        oImgUl.style.left = 0;
-			        _this.num = 1;
-			    } else if (_this.num == -1){	
-			        oImgUl.style.left = (-(len - 1) * step) + 'px';
-			        _this.num = len-2;		//添加了辅助图片需减2
-			    }
-			    _this.setTab(_this.num % (len - 1));
-				doMove(oImgUl, -_this.num * step, 'left', _this.average, 30); //调用publicFunction.js中的运动函数
-			}
-	
+	var wrapWidth = _this.width;
+	var images = _this.oImgUl;
+	var dotChildren = _this.dotUl.children;
+	var dotLen = _this.len - 1;   //因添加了辅助图片，指示器的个数为this.len-1
+	if (index !== undefined) {
+		_this.cur = index;
+	}
+	if(_this.cur >= _this.len){  //当图片到最后一张的时候，将oUl的left值设为0重新开始
+        images.style.left = 0;
+        _this.cur = 1;
+    } else if (_this.cur == -1){	//当图片到第一张的时候，将oUl的left值设为最后一张重新开始
+        images.style.left = (-dotLen * wrapWidth) + 'px';
+        _this.cur = _this.len-2;		//添加了辅助图片需减2
+    }
+    for (var i = 0; i < dotLen; i++) {	//清除dot的class
+		dotChildren[i].className = '';
+	}
+	dotChildren[_this.cur % dotLen].className = 'active';	//因添加了辅助图片,传入的index有可能大于dotLen
+	doMove(images, -(_this.cur) * wrapWidth, 'left', _this.options.average, 30); //调用publicFunction.js中的运动函数
+
 };
 Slide.prototype.paused = function () {		//暂停函数
 	clearInterval(this.timer);
@@ -130,10 +127,10 @@ Slide.prototype.play = function() {			//播放函数
 	clearInterval(this.timer);
 	this.timer = this.autoPlay();
 };
-Slide.prototype.go = function(n) {			//上一张或下一张函数
+Slide.prototype.go = function(n) {			//间隔n张跳转
 	clearInterval(this.timer);
-	n > 0 ? this.num++ : this.num--;		//当参数大于0为下一张，负数或0为上一张
-	this.move()();
+	this.cur = this.cur + n;	
+	this.move();
 }
 var json = {
 	imgData: [
@@ -146,20 +143,90 @@ var json = {
 	],
 	timeout: 2000,
 };
-var slider = new Slide('wrap1', json);	//示例化
+var slider = new Slide('#wrap1', json);	//示例化
 var oPausedBtn = document.getElementById('paused');
 var oPlayBtn = document.getElementById('play');
 var oPrev = document.getElementById('prev');
 var oNext = document.getElementById('next');
-oPausedBtn.onclick = function() {
+addEvent(oPausedBtn, 'click', function() {
 	slider.paused();
-};
-oPlayBtn.onclick = function() {
+});
+addEvent(oPlayBtn, 'click', function() {
 	slider.play();
-};
-oPrev.onclick = function() {
-	slider.go(0);
-};
-oNext.onclick = function() {
+});
+addEvent(oPrev, 'click', function() {
+	slider.go(-1);
+});
+addEvent(oPlayBtn, 'click', function() {
 	slider.go(1);
+});
+
+
+
+//公用函数
+function extend() {	//拷贝对象
+	var arg = arguments,
+		len = arg.length,
+	 	obj = {};
+	for (var i = 0; i < len; i++) {
+		for (var j in arg[i]) {
+			obj[j] = arg[i][j];
+		}
+	}
+	return obj;	
 };
+function addEvent(elm, type, fn) {	//添加事件
+	if (window.addEventListener) {
+		return elm.addEventListener(type, fn, false);
+	} else if (document.attachEvent) {
+		return elm.attachEvent('on' + type, fn);
+	} else {
+		return elm['on' + type] = fn;
+	}
+}
+function getStyle( obj, stylename ){		//检查样式数值
+	return obj.currentStyle ? obj.currentStyle[stylename] : getComputedStyle(obj)[stylename];
+}
+function doMove(obj,target,stylename,average,cycle,continuefunction){
+			// 参数类型:(对象，目标值，改变的样式属性，缓冲系数(速度与大小成反比)，周期时间(速度与大小成反比),回调函数(可有可无)) 
+	 clearInterval(obj.timer); 
+	 obj.timer=setInterval(function(){ 
+		if(stylename=="opacity"){ 
+			var offvalue=Math.round(parseFloat(getStyle(obj,stylename))*100); 
+			var speed=(target-offvalue)/average; 
+			 speed=speed>0?Math.ceil(speed):Math.floor(speed); 
+			 if(speed==0){ 
+				clearInterval(obj.timer); 
+				if(continuefunction) continuefunction(); 
+			 }else{ 
+				obj.style[stylename]=(offvalue+speed)/100; 
+				obj.style.filter="alpha(opacity:"+(offvalue+speed)+")"; 
+		 	} 
+		}else{ 
+			var offvalue=parseInt(getStyle(obj,stylename)); 
+			var speed=(target-offvalue)/average; 
+			speed=speed>0?Math.ceil(speed):Math.floor(speed); 
+			if(speed==0){ 
+				clearInterval(obj.timer); 
+				if(continuefunction) continuefunction(); 
+			}else{ 
+				obj.style[stylename]=offvalue+speed+"px"; 
+			} 
+		} 
+	},cycle); 
+}
+function doMoveCall( obj,attr,dir,target,endFn ){	//元素运动回调传参
+	dir = parseInt(getStyle( obj,attr )) < target ? dir : -dir;
+	clearInterval( obj.timer );
+	obj.timer = setInterval(function(){
+		var speed = parseInt(getStyle( obj,attr )) + dir;
+		if( speed < target && dir < 0 || speed > target && dir > 0  ) {
+			speed = target;
+		}
+		obj.style[attr] = speed + 'px';
+		if( speed == target ) {
+			clearInterval( obj.timer );
+			endFn && endFn.call( obj );
+		}
+	},30);
+}
