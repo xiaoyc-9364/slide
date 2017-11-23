@@ -15,6 +15,7 @@ Slide.prototype.defaults = {	//默认的属性
 Slide.prototype.init = function() {		//初始方法
 	this.createNode();
 	this.slideAddEvent();
+	this.move(0);	//初始状态跳转至第一张
 	this.timer = this.autoPlay();
 };
 
@@ -26,9 +27,11 @@ Slide.prototype.createNode = function () {		//创建轮播器的内容
 	this.dotUl = document.createElement('ul');	//创建选项卡ul
 	var dotStr = '';
 	var oLi, oLink, oImg;
+
 	this.wrap.className += 'slide_wrap';	//设置包裹元素的css
 	this.oImgUl.className = 'slide_main';		//添加class
 	this.dotUl.className = 'slide_tab';
+
 	for (var i = 0; i < imgDataLen; i++) {
 		dotStr += "<li></li>";
 		oLi = document.createElement('li');		//创建元素
@@ -42,7 +45,8 @@ Slide.prototype.createNode = function () {		//创建轮播器的内容
 		oLi.appendChild(oLink);			//a标签添加到li标签
 		this.oImgUl.appendChild(oLi);	
 	}
-	this.dotUl.innerHTML = dotStr;			
+	this.dotUl.innerHTML = dotStr;	
+
 	var aImg = this.oImgUl.getElementsByTagName('img');		
 	var aFirst = this.oImgUl.children[0].cloneNode(true);  //实现无缝隙，添加一张辅助图片
 	this.oImgUl.appendChild(aFirst);
@@ -50,60 +54,61 @@ Slide.prototype.createNode = function () {		//创建轮播器的内容
 	for (var j = 0; j < this.len; j++) {
 		aImg[j].style.width = this.width + 'px';		//设置图片的宽度和包裹元素一致
 	}
+
 	this.wrap.appendChild(this.oImgUl);		//将图片和选项卡的ul添加到包裹元素中
 	this.wrap.appendChild(this.dotUl);
 };
 
 Slide.prototype.slideAddEvent = function () {
 	var _this = this;
-	this.cur = 0;		//计数器
 	var wrapWidth = _this.width;
 	var imgChildren = _this.oImgUl.children;
 	var dotChildren = _this.dotUl.children;
 	var dotLen = dotChildren.length;
 	_this.oImgUl.style.width = _this.len * wrapWidth + 'px';		//设置包含图片的ul的宽度
+
 	for (var i = 0; i < _this.len; i++) {
 		//设置图片的定位
 		imgChildren[i].style.left = (i % _this.len) * wrapWidth + 'px';
-		//绑定事件
-		addEvent(imgChildren[i], 'mouseover', function() {
-			clearInterval(_this.timer);
-		});
-		addEvent(imgChildren[i], 'mouseout', function() {
-			clearInterval(_this.timer);
-			_this.timer = _this.autoPlay();
-		});
-		
+		//指示器绑定事件
 		(function (i) {		//i作为参数，需使用闭包
 			addEvent(dotChildren[i], 'mouseover', function () {
 				clearInterval(_this.timer);
-				_this.move(i);
+				_this.move(i);	//跳转至第i张
 			});
 			addEvent(dotChildren[i], 'mouseout', function () {
 				clearInterval(_this.timer);
 				_this.timer = _this.autoPlay();
 			});
 		})(i % dotLen);	
-
 	}
-	_this.move();
+	//将事件绑定到oImgUl中，避免多次绑定到各图片中影响性能
+	addEvent(_this.oImgUl, 'mouseover', function() {
+			clearInterval(_this.timer);
+	});
+	addEvent(_this.oImgUl, 'mouseout', function() {
+			clearInterval(_this.timer);
+			_this.timer = _this.autoPlay();
+	});
 };
+
 Slide.prototype.autoPlay = function() {		//自动播放
 	var _this = this;
 	return  setInterval(function(){
-		_this.cur = _this.options.direction ? _this.cur + 1 : _this.cur - 1;
-		_this.move();		//闭包
+		_this.move(_this.options.direction ? _this.cur + 1 : _this.cur - 1);	
 	}, _this.options.timeout);
-}
-Slide.prototype.move = function(index) {			//滑动函数
+};
+
+Slide.prototype.move = function(index) {			//跳转图片函数
 	var _this = this;
 	var wrapWidth = _this.width;
 	var images = _this.oImgUl;
 	var dotChildren = _this.dotUl.children;
 	var dotLen = _this.len - 1;   //因添加了辅助图片，指示器的个数为this.len-1
-	if (index !== undefined) {
-		_this.cur = index;
+	if (index === undefined) {	//必须传入参数，否则无法继续运行
+		return false;
 	}
+	_this.cur = index;
 	if(_this.cur >= _this.len){  //当图片到最后一张的时候，将oUl的left值设为0重新开始
         images.style.left = 0;
         _this.cur = 1;
@@ -118,18 +123,22 @@ Slide.prototype.move = function(index) {			//滑动函数
 	doMove(images, -(_this.cur) * wrapWidth, 'left', _this.options.average, 30); //调用publicFunction中的运动函数
 
 };
+
 Slide.prototype.paused = function () {		//暂停函数
 	clearInterval(this.timer);
 };
+
 Slide.prototype.play = function() {			//播放函数
 	clearInterval(this.timer);
 	this.timer = this.autoPlay();
 };
+
 Slide.prototype.go = function(n) {			//间隔n张跳转
 	clearInterval(this.timer);
-	this.cur = this.cur + n;
-	this.move();
-}
+	this.move(this.cur + n);
+	this.timer = this.autoPlay();
+};
+
 var json = {
 	imgData: [
 		{title: '百度', alt:'百度', href: 'http://www.baidu.com', src: 'img/1.jpg'},
@@ -146,6 +155,7 @@ var oPausedBtn = document.getElementById('paused');
 var oPlayBtn = document.getElementById('play');
 var oPrev = document.getElementById('prev');
 var oNext = document.getElementById('next');
+
 addEvent(oPausedBtn, 'click', function() {
 	slider.paused();
 });
